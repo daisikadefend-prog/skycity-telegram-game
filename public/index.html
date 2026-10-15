@@ -1,0 +1,171 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101827">
+<title>SkyCity - City Simulator</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --bg:#0b1220;
+  --panel:#152238;
+  --gold:#f0c75e;
+  --text:#eef4ff;
+  --muted:#a4b5ce;
+  --green:#4bd39b;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:radial-gradient(circle at top,#203957,#0b1220 65%);
+  color:var(--text);
+  font:14px system-ui,sans-serif;
+}
+button,input { font:inherit; }
+button {
+  border:0;
+  border-radius:10px;
+  padding:10px;
+  background:var(--gold);
+  color:#101827;
+  font-weight:800;
+  cursor:pointer;
+}
+button:disabled { opacity:.45; }
+.app { max-width:1100px; margin:auto; padding:12px 12px 85px; }
+header { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.logo { font-size:23px; font-weight:950; }
+.logo span { color:var(--gold); }
+.muted { color:var(--muted); font-size:12px; }
+.wallet,.panel,.stat {
+  background:linear-gradient(145deg,#192a41,#111c2d);
+  border:1px solid #30435e;
+  border-radius:15px;
+  padding:12px;
+}
+.wallet { text-align:right; }
+.wallet strong { color:var(--gold); font-size:18px; }
+.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:12px 0; }
+.stat b { display:block; font-size:18px; }
+.layout { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr); gap:12px; }
+h2 { font-size:16px; margin:0 0 10px; }
+.maphead,.line { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.map { display:grid; grid-template-columns:repeat(10,minmax(0,1fr)); gap:3px; }
+.tile {
+  position:relative;
+  min-width:0;
+  aspect-ratio:1;
+  border:1px solid #51765b;
+  border-radius:5px;
+  background:linear-gradient(135deg,#498460,#244e39);
+  color:white;
+  padding:0;
+  font-size:clamp(11px,2.3vw,22px);
+  overflow:hidden;
+}
+.tile:nth-child(5n) { background:linear-gradient(135deg,#397da0,#244e6a); }
+.tile:nth-child(7n) { background:linear-gradient(135deg,#8c7a4d,#5a4a2e); }
+.tile.owned { background:linear-gradient(135deg,#d5ae59,#8d6834); border-color:#ffe3a0; }
+.tile.sel { outline:2px solid white; }
+.tile .num { position:absolute; right:2px; bottom:0; font-size:8px; color:white; }
+.secondary { background:#293e59; color:white; border:1px solid #415a79; }
+.green { background:var(--green); }
+.section { margin-top:10px; }
+.actions { display:flex; gap:7px; flex-wrap:wrap; margin-top:9px; }
+.builds { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.build {
+  background:#1b2d45;
+  color:var(--text);
+  border:1px solid #344c6b;
+  text-align:left;
+  min-height:78px;
+  font-size:12px;
+}
+.build strong { display:block; margin:3px 0; }
+.build small { color:var(--muted); }
+.notice {
+  background:#20364d;
+  color:#cfe4ff;
+  border-radius:10px;
+  padding:9px;
+  margin-top:8px;
+  font-size:12px;
+  overflow-wrap:anywhere;
+}
+.field {
+  width:100%;
+  padding:10px;
+  background:#0c1727;
+  color:white;
+  border:1px solid #3a506d;
+  border-radius:10px;
+  margin:6px 0;
+}
+.districts {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5px;
+  max-height:250px;
+  overflow:auto;
+}
+.district {
+  background:#1b2d45;
+  color:white;
+  text-align:left;
+  font-size:11px;
+  padding:7px;
+}
+.hidden { display:none; }
+.nav {
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  display:flex;
+  justify-content:center;
+  gap:4px;
+  background:#0b1220ed;
+  border-top:1px solid #2a3d57;
+  padding:8px 4px calc(8px + env(safe-area-inset-bottom));
+  z-index:5;
+}
+.nav button {
+  flex:1;
+  max-width:150px;
+  background:transparent;
+  color:var(--muted);
+  font-size:11px;
+  padding:8px 2px;
+}
+.nav button.active { background:#293e59; color:var(--gold); }
+.toast {
+  display:none;
+  position:fixed;
+  top:12px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--gold);
+  color:#101827;
+  padding:11px 15px;
+  border-radius:12px;
+  z-index:10;
+  font-weight:900;
+  max-width:90%;
+}
+@media(max-width:720px) {
+  .layout { grid-template-columns:1fr; }
+  .app { padding:9px 8px 85px; }
+  .map { gap:2px; }
+  .tile { border-radius:3px; }
+  .panel { padding:10px; }
+  .stat { padding:9px; }
+  .stat b { font-size:15px; }
+}
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div><div class="app">
+<header>
+  <div>
+    <div class="logo">🏙️ SKY<span>CITY</span></div>
+    <
